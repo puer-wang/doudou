@@ -1663,6 +1663,30 @@ try{
 }catch(e){console.warn('FetchAll:',e.message);return[]}
 }
 
+/* ===== [JS-CLEAR] 教师端一键清空云端学生数据 ===== */
+async function cloudClearAllStudentData(){
+if(!_cloudReady)return false;
+try{
+  // 用一个恒真的过滤条件匹配全部行(PostgREST要求DELETE必须带过滤条件，不能空条件全删)
+  await sbFetch('/rest/v1/student_data?id=gte.00000000-0000-0000-0000-000000000000',{method:'DELETE'});
+  return true;
+}catch(e){console.warn('ClearAll:',e.message);return false;}
+}
+window.clearAllCloudData=async function(btn){
+  if(!confirm('⚠️ 即将清空云端全部学生数据（含所有练习记录、成长档案、老师反馈），此操作不可恢复。\n\n通常只在正式使用前清除测试数据时使用。确定要继续吗？'))return;
+  if(!confirm('再次确认：真的要永久删除全部学生的云端数据吗？删除后无法找回。'))return;
+  if(btn){btn.disabled=true;btn.textContent='清空中...';}
+  const ok=await cloudClearAllStudentData();
+  if(btn){btn.disabled=false;btn.textContent='🗑️ 清空云端学生数据';}
+  if(ok){
+    alert('✅ 云端学生数据已清空');
+    const box=document.getElementById('cloudStudentData');
+    if(box){box.style.display='none';box.innerHTML='';}
+  }else{
+    alert('清除失败，请检查网络连接是否正常、云同步是否处于已连接状态');
+  }
+};
+
 /* ===== [JS-D] 静态数据 ===== */
 const MODULES=[{name:"基础模块",color:"#2563eb",themes:[{id:"B1",label:"自我与他人"},{id:"B2",label:"学习与生活"},{id:"B3",label:"社会交往"},{id:"B4",label:"社会服务"},{id:"B5",label:"历史与文化"},{id:"B6",label:"科学与技术"},{id:"B7",label:"自然与环境"},{id:"B8",label:"可持续发展"}]},{name:"职业模块",color:"#d97706",themes:[{id:"V1",label:"求职应聘"},{id:"V2",label:"职场礼仪"},{id:"V3",label:"职场服务"},{id:"V4",label:"设备操作"},{id:"V5",label:"技术应用"},{id:"V6",label:"职场安全"},{id:"V7",label:"危机应对"},{id:"V8",label:"职业规则"}]},{name:"拓展模块",color:"#059669",themes:[{id:"E1",label:"自我发展"},{id:"E2",label:"技术创新"},{id:"E3",label:"环境保护"}]}];
 const YEARS=[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
@@ -4000,6 +4024,7 @@ function renderTeacherPanel(){
   <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
   <button class="ga-btn teacher" onclick="document.getElementById('hiddenBatchInput').click()">👩‍🏫 批量汇总学生档案</button>
   <button class="ga-btn primary" onclick="fetchCloudStudents()" id="cloudFetchBtn">☁️ 从云端加载全班数据</button>
+  <button class="ga-btn warn" onclick="clearAllCloudData(this)">🗑️ 清空云端学生数据</button>
   </div>
   <div id="cloudStudentData" style="display:none;margin-bottom:14px"></div>
   <div class="tdb-grid">
